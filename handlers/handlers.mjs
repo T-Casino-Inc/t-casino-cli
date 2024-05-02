@@ -17,21 +17,17 @@ async function mathOrExit(
       difficulty.difficulty,
     );
     validation = JSON.parse(validation);
-    console.log(validation);
     if (validation.result === "correct") {
+      console.log(validation.message);
       let response = null;
-      console.log("this was the difficulty", difficulty.difficulty);
       if (difficulty.difficulty === "Easy: 1 bit") {
-        console.log("you were right, and now we are going to the server!");
         response = await expressHandlers.mathPatchBalance(accessToken, 1, 0);
-      } else if (difficulty.difficulty === "medium") {
+      } else if (difficulty.difficulty === "Medium: 10 bits") {
         response = await expressHandlers.mathPatchBalance(accessToken, 10, 0);
-      } else if (difficulty.difficulty === "hard") {
+      } else if (difficulty.difficulty === "Hard: 30 bits") {
         response = await expressHandlers.mathPatchBalance(accessToken, 30, 0);
       }
-      console.log(validation.message);
       console.log("Your new bit balance is: ", response[0]);
-      console.log(typeof response);
     } else if (validation.result === "incorrect") {
       console.log(validation.message);
     }

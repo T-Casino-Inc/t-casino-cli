@@ -8,7 +8,13 @@ const openai = new OpenAI({
 });
 
 const mathQuestionHandler = async (level) => {
-  let inputText = `You are the host of 'Terminal Casino', a CLI where you enerate an new ${level} arithmetic math question. To keep the interaction consistent, respond with the introduction "Here is your question, good luck!" and then provide the math question with text.`;
+  let inputText = `{
+  "role": "Terminal Casino host",
+  "task": "create math question and answer",
+  "difficulty": "${level}, if easy (use only + and -),  if medium (use only * and /), and if hard (use +, -, *, /)",
+  "responsetype": "JSON object of problem: and answer:"
+  "responsesize": "max 64 characters"
+}`;
 
   try {
     // Sending request to generate a math question
@@ -22,13 +28,16 @@ const mathQuestionHandler = async (level) => {
       presence_penalty: 0,
     });
 
-    const question = response.choices[0].message.content.trim();
+    console.log("FROM THE GPT", response.choices[0].message.content);
+    let question = await JSON.parse(response.choices[0].message.content.trim());
 
+    console.log(question.problem);
     return [
       {
         type: "input",
         name: "question",
-        message: question,
+        message: question.problem,
+        answer: question.answer,
       },
     ];
   } catch (error) {
