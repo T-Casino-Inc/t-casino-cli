@@ -14,8 +14,9 @@ const validateHandler = async (answer, question, difficulty) => {
   "task": "verify answer",
   "answer": "${answer}",
   "question": "${question}",
-  "difficulty": "${difficulty}",
+  "difficulty": "${difficulty}, if easy (use only + and -),  if medium (use only * and /), and if hard (use +, -, *, /)",
   "responsetype": "json object of result: and message:"
+  "responsesize": "max 64 characters"
 }`;
 
     // Sending request to validate the user's answer
