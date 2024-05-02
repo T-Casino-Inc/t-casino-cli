@@ -153,5 +153,4 @@ async function playGame() {
 }
 
 // Start the game
-playGame();
 export default playGame;

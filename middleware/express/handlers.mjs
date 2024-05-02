@@ -28,10 +28,29 @@ async function getBalance(token) {
   }
 }
 
-async function patchBalance(token, bitGain, bitLoss) {
+async function mathPatchBalance(token, bitGain, bitLoss) {
   try {
     const response = await axios.patch(
-      `${process.env.EXPRESS_URL}/patch`,
+      `${process.env.EXPRESS_URL}/patchM`,
+      {
+        bitBalance: bitGain,
+        bitLoss: bitLoss,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error on patchBalance", error);
+  }
+}
+async function gamePatchBalance(token, bitGain, bitLoss) {
+  try {
+    const response = await axios.patch(
+      `${process.env.EXPRESS_URL}/patchG`,
       {
         bitBalance: bitGain,
         bitLoss: bitLoss,
@@ -48,4 +67,4 @@ async function patchBalance(token, bitGain, bitLoss) {
   }
 }
 
-export { signUp, getBalance, patchBalance };
+export default { signUp, getBalance, gamePatchBalance, mathPatchBalance };

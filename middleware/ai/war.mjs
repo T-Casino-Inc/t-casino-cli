@@ -134,5 +134,4 @@ function main() {
 
   nextRound(); // Start the first round
 }
-main();
 export default main;
