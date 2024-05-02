@@ -8,7 +8,7 @@ const openai = new OpenAI({
 });
 
 const mathQuestionHandler = async (level) => {
-  let inputText = `You are the host of 'Terminal Casino', a CLI where you enerate an new ${level} arithmetic math question. To keep the interaction consistent, respond with the introduction "Here is your question, good luck!" and then provide the math question.`;
+  let inputText = `You are the host of 'Terminal Casino', a CLI where you enerate an new ${level} arithmetic math question. To keep the interaction consistent, respond with the introduction "Here is your question, good luck!" and then provide the math question with text.`;
 
   try {
     // Sending request to generate a math question

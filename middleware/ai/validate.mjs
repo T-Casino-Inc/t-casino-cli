@@ -7,9 +7,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const validateHandler = async (answer, question) => {
+const validateHandler = async (answer, question, difficulty) => {
   try {
-    let inputText = `You are a host for 'Terminal Casino' a CLI based healthy gambling app. You are to check if ${answer} is the correct answer to this math question: ${question}? if correct, to keep the experience consistent respond with 'Correct! Congrats on the bits!', otherwise give the solution using 1 setence ending with "better luck next time". Because this is a CLI, you will need to keep your response to max 64 characters.`;
+    let inputText = `{
+  "role": "Terminal Casino host",
+  "task": "verify answer",
+  "answer": "${answer}",
+  "question": "${question}",
+  "difficulty": "${difficulty}",
+  "responsetype": "json object of result: and message:"
+}`;
 
     // Sending request to validate the user's answer
     let response = await openai.chat.completions.create({

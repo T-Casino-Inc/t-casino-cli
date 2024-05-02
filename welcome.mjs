@@ -1,10 +1,13 @@
 import inquirer from "inquirer";
 import dotenv from "dotenv";
-import mathQuestionHandler from "./middleware/ai/chatGPT.mjs";
-import { signUp, login } from "./middleware/express/handlers.mjs";
-import { createUser, loginUser } from "./middleware/auth0/handlers.mjs";
+import mathQuestionHandler from "./middleware/ai/generateMath.mjs";
+import expressHandlers from "./middleware/express/handlers.mjs";
 import Prompts from "./lib/Prompts.mjs";
+import { createUser, loginUser } from "./middleware/auth0/handlers.mjs";
 import validateHandler from "./middleware/ai/validate.mjs";
+import blackjack from "./middleware/ai/blackjack.mjs";
+import slots from "./middleware/ai/slots.mjs";
+import mathOrExit from "./handlers/handlers.mjs";
 
 dotenv.config();
 
@@ -13,6 +16,7 @@ let prompt = new Prompts();
 async function main() {
   let balanceCheck = null;
   const entryAnswers = await inquirer.prompt(prompt.entryQuestion);
+  let accessToken = null;
 
   if (entryAnswers.entry === "Enter Casino") {
     console.log("Great! Let's have some fun!");
@@ -21,9 +25,9 @@ async function main() {
       const loginInfo = await inquirer.prompt(prompt.loginQuestions);
       try {
         let response = await loginUser(loginInfo.email, loginInfo.password);
-        const accessToken = response.data.access_token;
-
-        balanceCheck = await login(accessToken);
+        accessToken = response.data.access_token;
+        balanceCheck = await expressHandlers.getBalance(accessToken);
+        console.log("Your current bit balance is: ", balanceCheck[0]);
       } catch (error) {
         console.error("Error on Login");
       }
@@ -32,33 +36,79 @@ async function main() {
           console.log(
             "you do not have enough bits to play, you must have 10 bits",
           );
-          let mathOrExit = await inquirer.prompt(prompt.mathorExit);
-          if (mathOrExit.entry === "Play Math Game") {
-            try {
-              console.log("here will be your future math question!");
-            } catch (error) {
-              console.error("Error on Math Question", error);
+          await mathOrExit(
+            inquirer,
+            prompt,
+            mathQuestionHandler,
+            validateHandler,
+            expressHandlers,
+            accessToken,
+          );
+        }
+        let gamblerChoice = await inquirer.prompt(prompt.mathorGame);
+        while (gamblerChoice.entry !== "Exit") {
+          if (gamblerChoice.entry === "Play Game") {
+            let gameChoice = await inquirer.prompt(prompt.whichGame);
+            if (gameChoice.entry === "War") {
+              console.log("War");
+              war();
+            } else if (gameChoice.entry === "BlackJack") {
+              console.log("BlackJack");
+              await blackjack();
+            } else if (gameChoice.entry === "Slots") {
+              console.log("Slots");
+              let { bits, amountSpent } = await slots(balanceCheck[0]);
+              console.log("bits", bits, "amountSpent", amountSpent);
+
+              let slotResponse = await expressHandlers.gamePatchBalance(
+                accessToken,
+                bits,
+                amountSpent,
+              );
+              console.log("Your new bit balance is: ", slotResponse[0]);
+            } else if (gameChoice.entry === "Exit") {
+              console.log("Goodbye! Hope to see you soon!");
+              process.exit();
             }
-          } else if (mathOrExit.entry === "Exit") {
-            console.log("Goodbye! Hope to see you soon!");
-            process.exit();
           }
+          if (gamblerChoice.entry === "Solve Math Problem") {
+            const difficulty = await inquirer.prompt(
+              prompt.difficultyQuestions,
+            );
+            const mathQuestions = await mathQuestionHandler(
+              difficulty.difficulty,
+            );
+            const mathQuestionAnswer = await inquirer.prompt(mathQuestions);
+            let validation = await validateHandler(
+              mathQuestionAnswer.question,
+              mathQuestions[0].message,
+              difficulty.difficulty,
+            );
+            validation = JSON.parse(validation);
+            console.log(validation);
+            if (validation.result === "correct") {
+              let response = null;
+              console.log("this was the difficulty", difficulty.difficulty);
+              if (difficulty.difficulty === "Easy: 1 bit") {
+                console.log(
+                  "you were right, and now we are going to the server!",
+                );
+                response = await mathPatchBalance(accessToken, 1, 0);
+              } else if (difficulty.difficulty === "medium") {
+                response = await mathPatchBalance(accessToken, 10, 0);
+              } else if (difficulty.difficulty === "hard") {
+                response = await mathPatchBalance(accessToken, 30, 0);
+              }
+              console.log(validation.message);
+              console.log("Your new bit balance is: ", response[0]);
+              console.log(typeof response);
+            } else if (validation.result === "incorrect") {
+              console.log(validation.message);
+            }
+          }
+          gamblerChoice = await inquirer.prompt(prompt.mathorGame);
         }
       }
-      // if (loginInfo) {
-      //   try {
-      //     const mathQuestionAnswer = await inquirer.prompt(mathQuestions);
-      //     // console.log("your answer", mathQuestionAnswer.question);
-      //     // console.log("you question", mathQuestions[0].message);
-      //     const validation = await validateHandler(
-      //       mathQuestionAnswer.question,
-      //       mathQuestions[0].message,
-      //     );
-      //     console.log(validation);
-      //   } catch (error) {
-      //     console.error("Error on Math Question", error);
-      //   }
-      // }
     } else if (loginAnswers.entry === "Sign Up") {
       console.log("Great! Let's get you signed up!");
       const signUpInfo = await inquirer.prompt(prompt.signUpQuestions);
