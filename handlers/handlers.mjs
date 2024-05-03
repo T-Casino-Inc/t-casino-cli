@@ -32,8 +32,11 @@ async function mathOrExit(
       }
       console.log("Your new bit balance is: ", response[0]);
       balanceCheck[0] = response[0];
-    } else if (validation.result === "incorrect") {
-      console.log(validation.message);
+    } else if (userAnswer.question !== answer) {
+      console.log(chalk.red.bold("Better luck next time!"));
+    }
+    if (mathOrExit.entry === "Exit") {
+      process.exit();
     }
     mathOrExit = await inquirer.prompt(prompt.mathorExit);
   }

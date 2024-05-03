@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
+import chalk from "chalk";
 
-//const symbols = ["@", "#", "$", "%", "&", "*"];
-const symbols = ["♤", "♡", "♧", "♢", "♥", "♦", "♣", "♠"]
+const symbols = ["♤", "♡", "♧", "♢", "♥", "♦", "♣", "♠"];
 
 function promptUser() {
   return inquirer.prompt([
@@ -28,10 +28,10 @@ function displayResults(reelResults) {
 
 function checkWin(reelResults) {
   if (reelResults[0] === reelResults[1] && reelResults[1] === reelResults[2]) {
-    console.log("Congratulations! You've won!");
+    console.log(chalk.cyan("Congratulations! You've won!"));
     return true;
   } else {
-    console.log("Try again!");
+    console.log(chalk.red("Try again!"));
     return false;
   }
 }
@@ -52,9 +52,9 @@ async function playGame(balanceCheck) {
       } else {
         currentBalance -= 1;
       }
-      console.log(`Current balance: ${currentBalance}`);
+      console.log(chalk.cyan(`Current balance: ${currentBalance}`));
       if (currentBalance < 1) {
-        console.log("You don't have enough bits to play.");
+        console.log(chalk.red.bold("You don't have enough bits to play."));
         break;
       }
     }

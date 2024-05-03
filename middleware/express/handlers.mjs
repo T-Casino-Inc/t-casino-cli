@@ -4,10 +4,9 @@ dotenv.config();
 
 async function signUp(id) {
   try {
-    const response = await axios.post(` ${process.env.EXPRESS_URL}/signup`, {
-      id
+    await axios.post(` ${process.env.EXPRESS_URL}/signup`, {
+      id,
     });
-    console.log(response.data);
   } catch (error) {
     console.error("Error on Login", error);
   }
