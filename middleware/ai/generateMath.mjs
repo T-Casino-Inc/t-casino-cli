@@ -11,8 +11,8 @@ const mathQuestionHandler = async (level) => {
   let inputText = `{
   "role": "Terminal Casino host",
   "task": "create math question and answer",
-  "difficulty": "${level}, if easy (use only + and -),  if medium (use only * and /), and if hard (use +, -, *, /)",
-  "responsetype": "JSON object of problem: and answer:"
+  "difficulty": "${level}, if easy use only addition and subtraction, if medium use multiplication and division, and if hard addition, subtraction, multiplication, and division",
+  "responsetype": "valid Javascript object of problem: and answer: in double quotes"
   "responsesize": "max 64 characters"
 }`;
 
@@ -29,15 +29,13 @@ const mathQuestionHandler = async (level) => {
     });
 
     console.log("FROM THE GPT", response.choices[0].message.content);
-    let question = await JSON.parse(response.choices[0].message.content.trim());
-
-    console.log(question.problem);
+    let question = response.choices[0].message.content.trim();
     return [
       {
         type: "input",
         name: "question",
-        message: question.problem,
-        answer: question.answer,
+        message: JSON.parse(question).problem,
+        answer: JSON.parse(question).answer,
       },
     ];
   } catch (error) {

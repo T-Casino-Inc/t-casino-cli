@@ -2,12 +2,10 @@ import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
 
-async function signUp(token) {
+async function signUp(id) {
   try {
-    const response = await axios.get(` ${process.env.EXPRESS_URL}/signup`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await axios.post(` ${process.env.EXPRESS_URL}/signup`, {
+      id
     });
     console.log(response.data);
   } catch (error) {

@@ -8,6 +8,7 @@ import validateHandler from "./middleware/ai/validate.mjs";
 import blackjack from "./middleware/ai/blackjack.mjs";
 import slots from "./middleware/ai/slots.mjs";
 import mathOrExit from "./handlers/handlers.mjs";
+import { readFileSync } from 'fs';
 
 dotenv.config();
 
@@ -78,17 +79,18 @@ async function main() {
               const difficulty = await inquirer.prompt(
                 prompt.difficultyQuestions,
               );
-              const mathQuestions = await mathQuestionHandler(
-                difficulty.difficulty,
-              );
-              let { type, name, message, answer } = mathQuestions[0];
-              console.log(message, answer);
-              const mathQuestionAnswer = await inquirer.prompt([
-                { type, name, message },
-              ]);
-    
-              let userAnswer = mathQuestionAnswer.question;
-              if (userAnswer === answer) {
+              const mathJSON = JSON.parse(readFileSync("./middleware/ai/demo-math.json" ));
+              const {problem, answer} = mathJSON[difficulty.difficulty][Math.floor(Math.random() * 9) + 1];
+              console.log(problem, answer);
+              let mathPrompt = [
+                {
+                  type: "input",
+                  name: "question",
+                  message: problem,
+                },
+              ];
+              const userAnswer = await inquirer.prompt(mathPrompt);
+              if (userAnswer.question === answer) {
                 let response = null;
                 if (difficulty.difficulty === "Easy: 1 bit") {
                   response = await expressHandlers.mathPatchBalance(
@@ -110,6 +112,7 @@ async function main() {
                   );
                 }
                 console.log("Your new bit balance is: ", response[0]);
+                balanceCheck[0] = response[0];
               } else {
                 console.log("Better luck next time!");
               }
