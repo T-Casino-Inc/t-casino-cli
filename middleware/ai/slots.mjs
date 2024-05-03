@@ -1,6 +1,7 @@
 import inquirer from "inquirer";
 
-const symbols = ["@", "#", "$", "%", "&", "*"];
+//const symbols = ["@", "#", "$", "%", "&", "*"];
+const symbols = ["♤", "♡", "♧", "♢", "♥", "♦", "♣", "♠"]
 
 function promptUser() {
   return inquirer.prompt([
