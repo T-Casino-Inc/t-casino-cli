@@ -1,24 +1,27 @@
+import { readFileSync } from "fs";
+
 async function mathOrExit(
   inquirer,
   prompt,
-  mathQuestionHandler,
-  validateHandler,
   expressHandlers,
   accessToken,
+  balanceCheck,
 ) {
   let mathOrExit = await inquirer.prompt(prompt.mathorExit);
   while (mathOrExit.entry === "Solve Math Problem") {
     const difficulty = await inquirer.prompt(prompt.difficultyQuestions);
-    const mathQuestions = await mathQuestionHandler(difficulty.difficulty);
-    const mathQuestionAnswer = await inquirer.prompt(mathQuestions);
-    let validation = await validateHandler(
-      mathQuestionAnswer.question,
-      mathQuestions[0].message,
-      difficulty.difficulty,
-    );
-    validation = JSON.parse(validation);
-    if (validation.result === "correct") {
-      console.log(validation.message);
+    const mathJSON = JSON.parse(readFileSync("./middleware/ai/demo-math.json"));
+    const { problem, answer } =
+      mathJSON[difficulty.difficulty][Math.floor(Math.random() * 9) + 1];
+    let mathPrompt = [
+      {
+        type: "input",
+        name: "question",
+        message: problem,
+      },
+    ];
+    const userAnswer = await inquirer.prompt(mathPrompt);
+    if (userAnswer.question === answer) {
       let response = null;
       if (difficulty.difficulty === "Easy: 1 bit") {
         response = await expressHandlers.mathPatchBalance(accessToken, 1, 0);
@@ -28,6 +31,7 @@ async function mathOrExit(
         response = await expressHandlers.mathPatchBalance(accessToken, 30, 0);
       }
       console.log("Your new bit balance is: ", response[0]);
+      balanceCheck[0] = response[0];
     } else if (validation.result === "incorrect") {
       console.log(validation.message);
     }
