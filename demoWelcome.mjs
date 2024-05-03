@@ -4,45 +4,64 @@ import expressHandlers from "./middleware/express/handlers.mjs";
 import Prompts from "./lib/Prompts.mjs";
 import { createUser, loginUser } from "./middleware/auth0/handlers.mjs";
 import blackjack from "./middleware/ai/blackjack.mjs";
-import slots from "./middleware/ai/slots.mjs";
+import slots from "./middleware/casino/slots.mjs";
 import mathOrExit from "./handlers/handlers.mjs";
 import { readFileSync } from "fs";
 import ora from "ora";
+import figlet from "figlet";
+import chalk from "chalk";
 
 dotenv.config();
+const spinner = ora({
+  text: "Logging in...",
+  spinner: "bouncingBar",
+  color: "cyan",
+});
+const spinner2 = ora({
+  text: "Checking balance...",
+  spinner: "dots",
+  color: "green",
+});
 
 let prompt = new Prompts();
 
 async function main() {
   let balanceCheck = null;
+  console.log(chalk.green(figlet.textSync("Terminal Casino!!")));
   const entryAnswers = await inquirer.prompt(prompt.entryQuestion);
   let accessToken = null;
 
   if (entryAnswers.entry === "Enter Casino") {
-    console.log("Great! Let's have some fun!");
     let loginAnswers = await inquirer.prompt(prompt.signUporLogin);
     while (loginAnswers.entry !== "Exit") {
       if (loginAnswers.entry === "Log In") {
         const loginInfo = await inquirer.prompt(prompt.loginQuestions);
         try {
-          const spinner = ora({
-            text: "Logging in...",
-            spinner: "bouncingBar", // You can choose different spinner styles
-            color: "cyan",
-          }).start();
+          spinner.start();
           let response = await loginUser(loginInfo.email, loginInfo.password);
           spinner.succeed("Welcome!");
           accessToken = response.data.access_token;
-          balanceCheck = await expressHandlers.getBalance(accessToken);
-          console.log("Your current bit balance is: ", balanceCheck[0]);
         } catch (error) {
-          console.error("Error on Login");
+          spinner.fail(chalk.red.bold("Error on Login"));
+          loginAnswers = await inquirer.prompt(prompt.signUporLogin);
+        }
+        try {
+          spinner2.start();
+          balanceCheck = await expressHandlers.getBalance(accessToken);
+          spinner2.succeed("Received balance!");
+          console.log(
+            chalk.green.bold("Your current bit balance is: ", balanceCheck[0]),
+          );
+        } catch (error) {
+          spinner2.fail(chalk.red.bold("Error on balance check"));
           process.exit();
         }
         if (balanceCheck) {
           if (balanceCheck[0] < 10) {
             console.log(
-              "you do not have enough bits to play, you must have 10 bits",
+              chalk.red.bold(
+                "You do not have enough bits to play, you must have 10 bits",
+              ),
             );
             await mathOrExit(
               inquirer,
@@ -54,7 +73,7 @@ async function main() {
           }
         }
         let gamblerChoice = await inquirer.prompt(prompt.mathorGame);
-        while (gamblerChoice.entry !== "Log Out") {
+        while (gamblerChoice.entry !== "Exit") {
           if (gamblerChoice.entry === "Play Game") {
             let gameChoice = await inquirer.prompt(prompt.demoGame);
             if (gameChoice.entry === "War") {
@@ -68,8 +87,8 @@ async function main() {
               let { bits, amountSpent } = await slots(balanceCheck[0]);
               console.log("bits", bits, "amountSpent", amountSpent);
               const spinner = ora({
-                text: "Reaching Database...",
-                spinner: "dots", // You can choose different spinner styles
+                text: "Updating Database...",
+                spinner: "dots",
                 color: "yellow",
               }).start();
 
@@ -78,7 +97,7 @@ async function main() {
                 bits,
                 amountSpent,
               );
-              spinner.succeed("Server contacted successfully");
+              spinner.succeed("Database updated");
               console.log("Your new bit balance is: ", slotResponse[0]);
             }
           }
@@ -143,15 +162,21 @@ async function main() {
             );
             const accessId = response.data._id;
             await expressHandlers.signUp(accessId);
+            console.log(
+              chalk.green.bold(
+                "You have successfully signed up! Please log in.",
+              ),
+            );
           } catch (error) {
-            console.log(error);
-            if (error.response.data.error) {
-              console.error(error.response.data.error);
-            } else if (error.response.data.message) {
+            if (error.response.data.message) {
               console.error(
-                error.response.data.message,
-                error.response.data.policy,
+                chalk.red.bold(
+                  error.response.data.message,
+                  error.response.data.policy,
+                ),
               );
+            } else {
+              console.error(chalk.red.bold("Error on Sign Up"));
             }
           }
         }
